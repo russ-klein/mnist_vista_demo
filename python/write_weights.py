@@ -26,6 +26,57 @@ def uint(n):
      return n
   return 0xFFFFFFFF + n + 1
 
+#===== write image heaader files ===================
+
+def write_image(name, a):
+   header_file = open(name + ".h", "w")
+   header_file.write("  unsigned char " + name + "[28][28] = { \n")
+   for row in range(a.shape[0]):
+     header_file.write("         { ");
+     for col in range(a.shape[1]):
+        if (a[row][col]>0):
+           header_file.write("0x{:02x}".format(a[row][col]))
+        else :
+           header_file.write("   0");
+        if (col < a.shape[1]-1):
+           header_file.write(", ")
+     if (row < a.shape[0]-1):
+        header_file.write(" }, \n");
+     else:
+        header_file.write(" }  \n");
+   header_file.write("     }; \n")
+   header_file.close()
+
+def number_string(i):
+   if (i == 0): 
+      return "zero"
+   if (i == 1): 
+      return "one"
+   if (i == 2):
+      return "two"
+   if (i== 3):
+      return "three"
+   if (i == 4):
+      return "four"
+   if (i == 5):
+      return "five"
+   if (i == 6):
+      return "six"
+   if (i == 7):
+      return "seven"
+   if (i == 8):
+      return "eight"
+   if (i == 9):
+      return "nine"
+   return None
+
+def write_all(xtest, ytest):
+   for num in range(10):
+      i = 0
+      while (ytest[i] != num) :
+         i = i + 1
+      write_image(number_string(ytest[i]), xtest[i])
+
 #===== print software inference function calls =====
 
 def add_spaces(file, width, number):
@@ -627,7 +678,7 @@ def write_header_file(model):
 
    header_file = open('weights.h', 'w')
    data_file   = open('weights_float.bin', 'w+b')
-   source_file = open('auto_infer.c', 'w')
+   source_file = open('auto_infer.h', 'w')
 
 
    header_file.write('#ifndef WEIGHTS_H_INCLUDED \n')
