@@ -8,7 +8,7 @@ import random
 def mnist_model(num_classes):
   # create model
   model = Sequential()
-  model.add(Conv2D(8, (3,3), use_bias=False, padding="same", activation="relu", input_shape=(28,28,1)))
+  model.add(Conv2D(10, (3,3), use_bias=False, padding="same", activation="relu", input_shape=(28,28,1)))
   model.add(Conv2D(3, (3,3), use_bias=False, padding="same", activation="relu"))
   model.add(Flatten())
   model.add(Dense(num_classes, use_bias=False, kernel_initializer='normal', activation='softmax'))
@@ -36,7 +36,7 @@ def create_and_train():
 
   model = mnist_model(num_classes)
 
-  model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=25, batch_size=200, verbose=1)
+  model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=200, verbose=1)
   scores = model.evaluate(X_test, y_test, verbose=0)
   print("Baseline Error: %.2f%%" % (100-scores[1]*100))
   return model

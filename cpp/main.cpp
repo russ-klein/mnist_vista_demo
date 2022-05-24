@@ -174,13 +174,20 @@ void test_inference()
                                    { (unsigned char *) seven, 7},
                                    { (unsigned char *) eight, 8},
                                    { (unsigned char *) nine,  9} };
-
+    bool verbose = true;
     const int num_tests = sizeof(testdata)/sizeof(testdata[0]);
 
     printf("testing sw inference... \n");
 
     for (i=0; i<num_tests; i++) {
+       if (verbose) print_char_image(testdata[i].features, 28, 28);
        sw_inference(testdata[i].features, sw_memory, sw_prob);
+       if (verbose) {
+           printf("Label: %d \n\n", testdata[i].label);
+           printf("Probabilities: \n");
+           for (int p=0; p<10; p++) printf("p[%d]: %6.4f \n", p, sw_prob[p]);
+           printf("\n");
+       }
        if (sw_prob[testdata[i].label] > 0.5) printf("sw inference for %d passed %6.2f \n", i, sw_prob[i] * 100.0); 
                                         else printf("sw inference for %d failed %6.2f \n", i, sw_prob[i] * 100.0);
     }

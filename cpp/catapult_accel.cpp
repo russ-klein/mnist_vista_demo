@@ -194,6 +194,21 @@ void dense_hw(
 
 #ifdef HOST
 
+void print_char_image(unsigned char *image, int height, int width)
+{
+   int r, c;
+
+   printf(" \n");
+   for (r=0; r<height; r++) {
+      for (c=0; c<width; c++) {
+         printf(" %3d", image[r * width + c]);
+      }
+      printf("\n");
+   }
+   printf("\n\n");
+}
+
+
 void print_image(float *image, int height, int width)
 {
    int r, c;
