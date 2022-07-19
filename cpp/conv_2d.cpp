@@ -48,6 +48,7 @@ void conv2d_sw(
                int width,
                int filter_height,
                int filter_width,
+               int maxpool,
                int relu,
                int bias)
 {
@@ -117,6 +118,28 @@ void conv2d_sw(
                 }
             }
         }
+        if (maxpool) {
+            for (r=0; r<height/stride; r++) {
+                for (c=0; c<width/stride; c++) {
+
+                    input_index = offset(r*stride, c*stride, o, height, width, num_output_images);
+                    output_index = offset(r, c, o, height/stride, width/stride, num_output_images);
+
+                    max = output_image[input_index];
+                    for (r1=0; r1<stride; r1++) {
+                        for (c1=0; c1<stride; c1++) {
+                            input_index = offset(r*stride + r1, c*stride + c1, o, height, width, num_output_images);
+
+                            n = output_image[input_index];
+                            if (n > max) {
+                                max = n;
+                            }
+                        }
+                    }
+                    output_image[output_index] = max;
+                }
+            }
+        }
     }
 }
 
@@ -136,6 +159,7 @@ void conv2d_hw(
                int width,
                int filter_height,
                int filter_width,
+               int maxpool,
                int relu,
                int bias)
 {
@@ -151,6 +175,7 @@ void conv2d_hw(
     int output_index;
     int input_index;
 
+    const int stride = 2;
     const int chatty = 0;
     
 
@@ -207,6 +232,28 @@ void conv2d_hw(
                 }
             }
         }
+        if (maxpool) {
+            for (r=0; r<height/stride; r++) {
+                for (c=0; c<width/stride; c++) {
+
+                    input_index = offset(r*stride, c*stride, o, height, width, num_output_images);
+                    output_index = offset(r, c, o, height/stride, width/stride, num_output_images);
+
+                    max = get_cat_value(memory, output_image + input_index); // output_image[input_index];
+                    for (r1=0; r1<stride; r1++) {
+                        for (c1=0; c1<stride; c1++) {
+                            input_index = offset(r*stride + r1, c*stride + c1, o, height, width, num_output_images);
+
+                            n = get_cat_value(memory, output_image + input_index); // output_image[input_index];
+                            if (n > max) {
+                                max = n;
+                            }
+                        }
+                    }
+                    set_cat_value(memory, output_image + output_index, max); // output_image[output_index] = max;
+                }
+            }
+        }
     }
 }
 
@@ -226,6 +273,7 @@ void conv2d_hw(
                int width,
                int filter_height,
                int filter_width,
+               int max_pool,
                int relu,
                int bias)
 {
@@ -272,6 +320,7 @@ void conv2d_hw(
                int width,
                int filter_height,
                int filter_width,
+               int max_pool,
                int relu,
                int bias)
 {

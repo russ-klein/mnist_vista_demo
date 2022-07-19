@@ -10,6 +10,7 @@ void conv2d_sw(
                int width,
                int filter_height,
                int filter_width,
+               int max_pool,
                int relu,
                int bias);
 
@@ -25,6 +26,7 @@ void conv2d_hw(
                int width,
                int filter_height,
                int filter_width,
+               int max_pool,
                int relu,
                int bias);
 

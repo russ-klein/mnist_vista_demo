@@ -42,6 +42,7 @@
 #endif
 
 #ifndef PAR_IN
+PAR_IN was not defined
 #define PAR_IN  (1)
 #endif // ndef PAR_IN
 
@@ -131,6 +132,6 @@ typedef unsigned int bus_type;
 // static raw_bus_type         weight_memory[WEIGHT_MEMORY_SIZE];
 #endif // not ARM
 
-static const char program_name[] = "wakeword";
+static const char program_name[] = "mnist_infer";
 
 #endif

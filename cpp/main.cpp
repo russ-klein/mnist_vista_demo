@@ -174,15 +174,16 @@ void test_inference()
                                    { (unsigned char *) seven, 7},
                                    { (unsigned char *) eight, 8},
                                    { (unsigned char *) nine,  9} };
-    bool verbose = true;
     const int num_tests = sizeof(testdata)/sizeof(testdata[0]);
+
+    const int chatty = 0;
 
     printf("testing sw inference... \n");
 
     for (i=0; i<num_tests; i++) {
-       if (verbose) print_char_image(testdata[i].features, 28, 28);
+       if (chatty) print_char_image(testdata[i].features, 28, 28);
        sw_inference(testdata[i].features, sw_memory, sw_prob);
-       if (verbose) {
+       if (chatty) {
            printf("Label: %d \n\n", testdata[i].label);
            printf("Probabilities: \n");
            for (int p=0; p<10; p++) printf("p[%d]: %6.4f \n", p, sw_prob[p]);
@@ -217,6 +218,60 @@ int p_index(float *probability)
     return max_index;
 }
 
+#ifdef HOST
+
+int max_probability(float *p)
+{
+    int i;
+    int maximum = 0;
+    float biggest = p[0];
+
+    for (i=0; i<10; i++) {
+        if (p[i]>biggest) {
+            biggest = p[i];
+            maximum = i;
+        }
+    }
+    return maximum;
+}
+
+void sweep()
+{   
+    FILE *f = fopen("/Users/russk/python/mnist_cat/testdata.bin", "r");
+    
+    float probabilities[10]; 
+    float image[image_height * image_width];
+    static cat_memory_type hw_memory[0x1000000];  // make it static so you do not blow up the stack
+    static float           sw_memory[0x1000000];
+    unsigned char raw_image[image_height][image_width];
+    unsigned char answer;
+    size_t n; 
+    int tests = 0;
+    int correct = 0;
+    
+    if (f == NULL) {
+        printf("Unable to open testdata.bin for reading \n");
+        perror("oops");
+        return;
+    }
+    while (!feof(f) && (tests < 1000)) {
+        n = fread(&answer, 1, 1, f);
+        if (n) {
+            n = fread(&raw_image, image_height * image_width, 1, f);
+            if (n) {
+                hw_inference(&(raw_image[0][0]), hw_memory, probabilities);
+                if (answer == max_probability(probabilities)) correct++;
+                // else show(answer, raw_image, probabilities);
+                tests++;
+            }
+        }
+    }
+    fclose(f);
+    printf("tests: %d correct: %d percentage correct: %4.2f \n", tests, correct, 100 * ((float) correct) / ((float) tests));
+    
+    return;
+}
+#endif
 
 int main()
 {
@@ -233,8 +288,13 @@ int main()
     float           *sw_memory = (float *) 0x50000000;
 #endif
 
+#ifdef SWEEP
+    sweep();
+#else
     test_inference();
+#endif
 
+/*
     printf("start sw: \n");
     sw_inference(&three[0][0], sw_memory, sw_prob);
 
@@ -257,7 +317,7 @@ int main()
         printf("Test passed! \n");
         return 0;
     }
-
+*/
     return 0;
 }
 

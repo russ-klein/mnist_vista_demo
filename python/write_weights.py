@@ -100,7 +100,7 @@ def print_inference_prolog(source_file):
    source_file.write('{ \n');
 
 
-def print_convolution_call(source_file, layer, weight_ptr, input_ptr):
+def print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool):
 
    in_shape = layer.input_shape
    in_size = in_shape[1] * in_shape[2] * in_shape[3]
@@ -124,10 +124,16 @@ def print_convolution_call(source_file, layer, weight_ptr, input_ptr):
    write_with_comment(source_file, '       {:d},          ', layer.kernel.shape[0], '// kernel height ')
    write_with_comment(source_file, '       {:d},          ', layer.kernel.shape[1], '// kernel width ')
 
+   if max_pool:
+      source_file.write('       1,                      // apply max pooling          \n')
+   else:
+      source_file.write('       0,                      // don\'t apply max pooling \n')
+
    if layer.activation.__name__ == 'relu':
       source_file.write('       1,                      // apply relu \n')
    else:
       source_file.write('       0,                      // don\'t apply relu \n')
+
    if layer.use_bias:
       source_file.write('       1);                     // apply bias \n')
    else:
@@ -217,7 +223,7 @@ def print_sw_inference(model, source_file):
                out_shape = model.layers[i+1].output_shape
                print('max pool output_shape: ', out_shape)
 
-         print_convolution_call(source_file, layer, weight_ptr, input_ptr)
+         print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool)
 
          weight_size = layer.kernel.shape[0] * layer.kernel.shape[1] * layer.kernel.shape[2] * layer.kernel.shape[3]
          out_size = out_shape[1] * out_shape[2] * out_shape[3]
@@ -259,7 +265,7 @@ def hw_print_inference_prolog(source_file):
    source_file.write('{ \n');
 
 
-def hw_print_convolution_call(source_file, layer, weight_ptr, input_ptr):
+def hw_print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool):
 
    in_shape = layer.input_shape
    in_size = in_shape[1] * in_shape[2] * in_shape[3]
@@ -296,10 +302,16 @@ def hw_print_convolution_call(source_file, layer, weight_ptr, input_ptr):
    #source_file.write('       {:d},           // kernel height           \n'.format(layer.kernel.shape[0]))
    #source_file.write('       {:d},           // kernel width            \n'.format(layer.kernel.shape[1]))
 
+   if max_pool:
+      source_file.write('       1,                      // apply max pooling          \n')
+   else:
+      source_file.write('       0,                      // don\'t apply max pooling \n')
+
    if layer.activation.__name__ == 'relu':
       source_file.write('       1,                      // apply relu              \n')
    else:
       source_file.write('       0,                      // don\'t apply relu        \n')
+
    if layer.use_bias:
       source_file.write('       1);                     // apply bias              \n')
    else:
@@ -407,7 +419,7 @@ def print_hw_inference(model, source_file):
                out_shape = model.layers[i+1].output_shape
                print('max pool output_shape: ', out_shape)
 
-         hw_print_convolution_call(source_file, layer, weight_ptr, input_ptr)
+         hw_print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool)
 
          weight_size = layer.kernel.shape[0] * layer.kernel.shape[1] * layer.kernel.shape[2] * layer.kernel.shape[3]
          out_size = out_shape[1] * out_shape[2] * out_shape[3]

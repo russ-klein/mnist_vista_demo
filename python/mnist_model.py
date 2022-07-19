@@ -1,7 +1,7 @@
 # Baseline MLP for MNIST dataset
 from keras.datasets import mnist
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, Flatten
+from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from keras.utils import np_utils
 import numpy as np
 import random
@@ -19,10 +19,13 @@ import random
 def mnist_model(num_classes):
   # create model
   model = Sequential()
-  model.add(Conv2D(10, (3,3), use_bias=False, padding="same", activation="relu", input_shape=(28,28,1)))
-  model.add(Conv2D(3, (3,3), use_bias=False, padding="same", activation="relu"))
+  model.add(Conv2D(15, (5,5), use_bias=True, padding="same", activation="relu", input_shape=(28,28,1)))
+  model.add(MaxPooling2D(pool_size=(2,2)))
+  model.add(Conv2D(15, (3,3), use_bias=True, padding="same", activation="relu"))
+  model.add(MaxPooling2D(pool_size=(2,2)))
   model.add(Flatten())
-  model.add(Dense(num_classes, use_bias=False, kernel_initializer='normal', activation='softmax'))
+  model.add(Dense(20, use_bias=True, kernel_initializer='normal'))
+  model.add(Dense(num_classes, use_bias=True, kernel_initializer='normal', activation='softmax'))
   # Compile model
   model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
   return model

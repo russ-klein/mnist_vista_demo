@@ -4,6 +4,10 @@ CATAPULT_HOME    ?= /wv/hlsb/CATAPULT/$(CATAPULT_VERSION)/PRODUCTION/aol/Mgc_hom
 
 #==============================================
 
+ifdef SWEEP
+ XTRA_OPTS += -D SWEEP
+endif
+
 PAR              ?= 1
 
 OBJS             = main.o
@@ -25,9 +29,12 @@ INCLUDES         += -I $(CATAPULT_HOME)/shared/include
 INCLUDES         += -I ~/catapult/include 
 
 OPTS             = -std=c++11
+OPTS             += -D PAR_IN=$(PAR)
 OPTS             += -D HOST
 OPTS             += -D FIXED_POINT
 OPTS             += -D ALGORITHMIC_VERSION
+
+OPTS             += $(XTRA_OPTS)
 
 QUIET_FLAG       = --no-print-directory
 
