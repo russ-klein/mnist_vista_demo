@@ -237,7 +237,7 @@ int max_probability(float *p)
 
 void sweep()
 {   
-    FILE *f = fopen("/Users/russk/python/mnist_cat/testdata.bin", "r");
+    FILE *f = fopen("../testdata/testdata.bin", "r");
     
     float probabilities[10]; 
     float image[image_height * image_width];
