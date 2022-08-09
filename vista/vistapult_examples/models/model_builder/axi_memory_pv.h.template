@@ -1,0 +1,32 @@
+
+/**************************************************************/
+/*                                                            */
+/*               Copyright (c) Siemens 2021                   */
+/*                  All Rights Reserved                       */
+/*                                                            */
+/*       THIS WORK CONTAINS TRADE SECRET AND PROPRIETARY      */
+/*         INFORMATION WHICH IS THE PROPERTY OF SIEMENS       */
+/*             CORPORATION OR ITS LICENSORS AND IS            */
+/*                 SUBJECT TO LICENSE TERMS.                  */
+/*                                                            */
+/**************************************************************/
+
+
+#pragma once
+#include "axi_memory_model.h"
+
+class axi_memory_pv : public axi_memory_base1_pv {
+
+public:
+  axi_memory_pv(sc_module_name module_name)
+    : axi_memory_base1_pv(module_name) {
+  }
+
+public:
+  /* the route function will return a master port index based on the
+     slave port index "target_port" and the corresponding "address"
+     the port index is defined as : <port_name>_idx */
+  virtual unsigned route(unsigned slave_port, config::uint64 address) {
+    return axi_memory_base1_pv::route(slave_port, address);
+  }
+};

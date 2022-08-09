@@ -1,0 +1,81 @@
+# ============================ TLM Model File ============================
+# You can create tlm model by one of the following ways:
+#   - load this file using 'load_model' API function
+#   - compile this file using "Modeling->Load Model File" menu command.
+# ========================================================================
+template "/TLM/Generic_Library/Cores/riscv_mp"
+
+# === class templates ===
+# usage: add_class_template <template type> <template name>
+# example: add_class_template class "T" 
+
+# === ports ===
+add_port "master" /TLM/protocols/axi master 32 -bind_mode mandatory
+add_port "n_periph_reset" /TLM/protocols/signal slave 1 -bind_mode optional
+add_port "n_reset_0" /TLM/protocols/signal slave 1 -bind_mode optional
+add_port "irq_0" /TLM/protocols/signal slave 1 -bind_mode optional
+
+# === parameters ===
+add_parameter "dcache_size" 32768 uint32 {16384 32768 65536}
+add_parameter "icache_size" 32768 uint32 {16384 32768 65536}
+add_parameter "l2_cache_size" 131072 uint32 {131072 262144 524288 1048576}
+add_parameter "control_page_address" 0 uint64 {}
+add_parameter "elf_image_file" sw/dma_test.x string {}
+add_parameter "gdbstub_port" 0 uint32 {}
+add_parameter "instruction_latency" clock time {}
+add_parameter "instruction_energy" {5 nj} energy {}
+add_parameter "lt_synch_quantum" {50 us} time {}
+
+# === auto parameters ===
+set_auto_parameter_default "clock" {10 ns} time {}
+set_auto_parameter_default "signal_clock" clock time {}
+set_auto_parameter_default "axi_clock" clock time {}
+set_auto_parameter_default "nominal_voltage" 1 double {}
+set_auto_parameter_default "mb_debug" false boolean {true false}
+set_auto_parameter_default "mb_debug_start_time" {0 ns} time {}
+set_auto_parameter_default "mb_debug_end_time" {0 ns} time {}
+set_auto_parameter_default "mb_debug_address_read" 0x10:0x0 string {
+        "0x10:0x50;0x70:0x80"}
+set_auto_parameter_default "mb_debug_address_write" 0x10:0x0 string {
+        "0x10:0x50;0x70:0x80"}
+set_auto_parameter_default "port_enable" true boolean {true false}
+set_auto_parameter_default "verbose_parameters" true boolean {true false}
+set_auto_parameter_default "dmi_enabled" true boolean {true false}
+set_auto_parameter_default "warning_level" WARNING string {
+      "IGNORE" "WARNING" "ONCE" "ERROR" "FATAL"}
+set_auto_parameter_default "master_outstanding" 1 uint32 {}
+set_auto_parameter_default "master_read_data_queue_size" 0 uint32 {}
+set_auto_parameter_default "master_write_data_queue_size" 0 uint32 {}
+set_auto_parameter_default "n_periph_reset_pipeline_length" 2 uint32 {}
+set_auto_parameter_default "n_reset_0_pipeline_length" 2 uint32 {}
+set_auto_parameter_default "irq_0_pipeline_length" 2 uint32 {}
+
+# === generics ===
+add_generic BITNESS 32 -values {32 64}
+add_generic NUM_CPU 1 -values {1 2 3 4 5 6}
+add_generic IS_64BIT 0 -values {0 1}
+add_generic HAS_PHYSICAL_MEMORY_PROTECTION 0 -values {0 1}
+add_generic HAS_TIMER 0 -values {0 1}
+add_generic NUM_PLIC_IRQS 0
+add_generic MASTER_PROTOCOL axi -values {axi ahb_master}
+add_generic SLAVE_PROTOCOL axi -values {axi ahb_slave}
+add_generic HAS_PERIPH_MASTER 0 -values {0 1}
+add_generic PERIPH_MASTER_PROTOCOL ahb_master -values {ahb_master generic}
+add_generic PERIPH_MASTER_BITNESS 32 -values {32 64}
+add_generic HAS_EXTERNAL_ITCM 0 -values {0 1}
+add_generic HAS_EXTERNAL_DTCM 0 -values {0 1}
+
+# === generate options ===
+set_generate_kind "pvt" ;# should be one of: model|pv|pvt
+set_include_file ""
+set_external_pv_include ""
+set_pv_kind "template" ;# should be one of: template|external
+set_timing_kind "policies" ;# should be: policies
+set_power_kind "policies" ;# should be: policies
+set_class_name_external_pv ""
+set_max_parameters_of_pv_constructor 5
+set_overwrite 0
+set_generate_ipxact 0
+set_ipxact_vendor "Mentor.com"
+set_ipxact_version 1.0
+

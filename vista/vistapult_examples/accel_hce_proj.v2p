@@ -1,0 +1,49 @@
+ProjectName accel_hce_proj
+Files {
+	 Sources {
+		{$PRJDIR/accel_hce_sc_main.cpp}
+		{$PRJDIR/models/hce_app/conv_2d.cpp}
+		{$PRJDIR/models/hce_app/dense.cpp}
+		{$PRJDIR/models/hce_app/main.cpp}
+		{$PRJDIR/models/hce_app/cat_access.cpp}
+		{$PRJDIR/models/hce_app/catapult_accel.cpp}
+	 } 
+	 Models {
+		{$PRJDIR/models/hce_cpu.mb}
+		{$PRJDIR/models/conv_2d.mb}
+		{$PRJDIR/models/console_out.mb}
+		{$PRJDIR/models/axi_mem.mb}
+		{$PRJDIR/models/accel_bus.mb}
+		{$PRJDIR/models/Dense.mb}
+	 } 
+	 Schematics {
+		{$PRJDIR/circuits/accel_hce.h}
+	 } 
+	 {TCL Based Connections} {} 
+}
+Designs {{$PRJDIR/accel_hce_sc_main.cpp}}
+Simulations /home/russk/volvo_project/mnist_vista_demo/vista/vistapult_examples/accel_hce_proj/sim
+Folders {
+	 Sources {*.c *.cpp *.C *.cxx *.cc} 
+	 {Public Headers} {*.h *.hpp *.H *.hxx *.hh} 
+	 Models *.mb 
+	 Schematics {} 
+	 {TCL Based Connections} {*.tbd *.h} 
+	 Documentation {*.txt *.TXT *.doc *.DOC *.pdf *.PDF *.html *.HTML *.htm *.HTM *.ps *.PS} 
+	 {Linked Binaries} {*.o *.a *.so} 
+	 {Other Binaries} {*.exe *.x} 
+}
+IncludePaths {{$CATAPULT_HOME/shared/include} ../../models/hce_app ../../../../include}
+GeneralCompilationOptions {-Wall -std=c++11 -D HOST -D FIXED_POINT -D VISTA -D CLASS_PREFIX=hce_cpu_pv::}
+AlwaysCompileInCPPMode 1
+LinkPackages model_builder
+ProjectLibraryType archive
+ProjectComponentsLibraryPath {$PRJDIR/$PRJFILE_BASENAME/interfaces}
+ProjectWorkingDirectory {$PRJDIR/$PRJFILE_BASENAME/build}
+HasTLMSupport 0
+CompiledWithTLMSupport 0
+IsUsePathVariables 1
+PlatformName accel_hce_proj
+ProjectReadOnly 0
+ProjectBuildMultiPlatform 0
+IsHyConProject 0

@@ -1,0 +1,44 @@
+ProjectName accel_cpu_proj
+Files {
+	 Sources {
+		{$PRJDIR/accel_cpu_sc_main.cpp}
+	 } 
+	 Models {
+		{$PRJDIR/models/Dense.mb}
+		{$PRJDIR/models/conv_2d.mb}
+		{$PRJDIR/models/accel_bus.mb}
+		{$PRJDIR/models/riscv.mb}
+		{$PRJDIR/models/axi_mem.mb}
+		{$PRJDIR/models/console_out.mb}
+	 } 
+	 Schematics {
+		{$PRJDIR/circuits/accel_cpu.h}
+	 } 
+	 {TCL Based Connections} {} 
+}
+Designs {{$PRJDIR/accel_cpu_sc_main.cpp}}
+Simulations /home/russk/volvo_project/mnist_vista_demo/vista/vistapult_examples/accel_cpu_proj/sim
+Folders {
+	 Sources {*.c *.cpp *.C *.cxx *.cc} 
+	 {Public Headers} {*.h *.hpp *.H *.hxx *.hh} 
+	 Models *.mb 
+	 Schematics {} 
+	 {TCL Based Connections} {*.tbd *.h} 
+	 Documentation {*.txt *.TXT *.doc *.DOC *.pdf *.PDF *.html *.HTML *.htm *.HTM *.ps *.PS} 
+	 {Linked Binaries} {*.o *.a *.so} 
+	 {Other Binaries} {*.exe *.x} 
+}
+IncludePaths {{$CATAPULT_HOME/shared/include}}
+GeneralCompilationOptions -Wall
+AlwaysCompileInCPPMode 1
+LinkPackages model_builder
+ProjectLibraryType archive
+ProjectComponentsLibraryPath {$PRJDIR/$PRJFILE_BASENAME/interfaces}
+ProjectWorkingDirectory {$PRJDIR/$PRJFILE_BASENAME/build}
+HasTLMSupport 0
+CompiledWithTLMSupport 0
+IsUsePathVariables 1
+PlatformName accel_cpu_proj
+ProjectReadOnly 0
+ProjectBuildMultiPlatform 0
+IsHyConProject 0

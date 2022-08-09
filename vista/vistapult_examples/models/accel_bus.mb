@@ -1,0 +1,117 @@
+# ============================ TLM Model File ============================
+# You can create tlm model by one of the following ways:
+#   - load this file using 'load_model' API function
+#   - compile this file using "Modeling->Load Model File" menu command.
+# ========================================================================
+template "/TLM/Generic_Library/Bus"
+
+# === class templates ===
+# usage: add_class_template <template type> <template name>
+# example: add_class_template class "T" 
+
+# === ports ===
+add_port "cpu_master" /TLM/protocols/axi slave 32 -bind_mode mandatory
+add_port "conv_2d_master" /TLM/protocols/axi slave 32 -bind_mode mandatory
+add_port "dense_master" /TLM/protocols/axi slave 32 -bind_mode mandatory
+add_port "code_and_data" /TLM/protocols/axi master 32 -bind_mode mandatory
+add_port "console" /TLM/protocols/axi master 32 -bind_mode mandatory
+add_port "conv_2d_slave" /TLM/protocols/axi master 32 -bind_mode mandatory
+add_port "dense_slave" /TLM/protocols/axi master 32 -bind_mode mandatory
+add_port "shared_memory" /TLM/protocols/axi master 32 -bind_mode mandatory
+
+# === parameters ===
+# usage: add_parameter <parameter_name> <default_value> <type:string|unsigned|int>
+# example: add_parameter "parameter1" 12 unsigned
+
+# === auto parameters ===
+set_auto_parameter_default "clock" {10 ns} time {}
+set_auto_parameter_default "axi_clock" clock time {}
+set_auto_parameter_default "nominal_voltage" 1 double {}
+set_auto_parameter_default "port_enable" true boolean {true false}
+set_auto_parameter_default "verbose_parameters" true boolean {true false}
+set_auto_parameter_default "dmi_enabled" true boolean {true false}
+set_auto_parameter_default "warning_level" WARNING string {
+      "IGNORE" "WARNING" "ONCE" "ERROR" "FATAL"}
+set_auto_parameter_default "layers" {""} string {}
+set_auto_parameter_default "slave_sets" {""} string {}
+set_auto_parameter_default "write_broadcast" 0 uint32 {}
+set_auto_parameter_default "cpu_master_priority" 0 uint32 {}
+set_auto_parameter_default "cpu_master_vmap" {""} string {}
+set_auto_parameter_default "conv_2d_master_priority" 0 uint32 {}
+set_auto_parameter_default "conv_2d_master_vmap" {""} string {}
+set_auto_parameter_default "dense_master_priority" 0 uint32 {}
+set_auto_parameter_default "dense_master_vmap" {""} string {}
+set_auto_parameter_default "code_and_data_priority" 0 uint32 {}
+set_auto_parameter_default "code_and_data_base_address" 0 uint64 {}
+set_auto_parameter_default "code_and_data_size" 0x1000000 uint64 {}
+set_auto_parameter_default "code_and_data_subtract_base_address" 1 uint32 {0 1}
+set_auto_parameter_default "code_and_data_secure" 0 uint32 {0 1}
+set_auto_parameter_default "code_and_data_additional_ranges" {""} string {}
+set_auto_parameter_default "code_and_data_latency" 0 uint32 {}
+set_auto_parameter_default "console_priority" 0 uint32 {}
+set_auto_parameter_default "console_base_address" 0x60080000 uint64 {}
+set_auto_parameter_default "console_size" 0x10000 uint64 {}
+set_auto_parameter_default "console_subtract_base_address" 1 uint32 {0 1}
+set_auto_parameter_default "console_secure" 0 uint32 {0 1}
+set_auto_parameter_default "console_additional_ranges" {""} string {}
+set_auto_parameter_default "console_latency" 0 uint32 {}
+set_auto_parameter_default "conv_2d_slave_priority" 0 uint32 {}
+set_auto_parameter_default "conv_2d_slave_base_address" 0x70000000 uint64 {}
+set_auto_parameter_default "conv_2d_slave_size" 0x10000 uint64 {}
+set_auto_parameter_default "conv_2d_slave_subtract_base_address" 1 uint32 {0 1}
+set_auto_parameter_default "conv_2d_slave_secure" 0 uint32 {0 1}
+set_auto_parameter_default "conv_2d_slave_additional_ranges" {""} string {}
+set_auto_parameter_default "conv_2d_slave_latency" 0 uint32 {}
+set_auto_parameter_default "dense_slave_priority" 0 uint32 {}
+set_auto_parameter_default "dense_slave_base_address" 0x80000000 uint64 {}
+set_auto_parameter_default "dense_slave_size" 0x10000 uint64 {}
+set_auto_parameter_default "dense_slave_subtract_base_address" 1 uint32 {0 1}
+set_auto_parameter_default "dense_slave_secure" 0 uint32 {0 1}
+set_auto_parameter_default "dense_slave_additional_ranges" {""} string {}
+set_auto_parameter_default "dense_slave_latency" 0 uint32 {}
+set_auto_parameter_default "shared_memory_priority" 0 uint32 {}
+set_auto_parameter_default "shared_memory_base_address" 0x40000000 uint64 {}
+set_auto_parameter_default "shared_memory_size" 0x1000000 uint64 {}
+set_auto_parameter_default "shared_memory_subtract_base_address" 1 uint32 {0 1}
+set_auto_parameter_default "shared_memory_secure" 0 uint32 {0 1}
+set_auto_parameter_default "shared_memory_additional_ranges" {""} string {}
+set_auto_parameter_default "shared_memory_latency" 0 uint32 {}
+
+# === generics ===
+# usage: add_generic <generic_name> <value>
+# example: add_generic "OUT_ACTIVE_VALUE" false
+
+# === machine architecture ===
+add_delay_policy cpu_master 0 -latency 0 -sync 1 -power 0
+add_pipeline_policy code_and_data cpu_master -latency code_and_data_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy console cpu_master -latency console_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy conv_2d_slave cpu_master -latency conv_2d_slave_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy dense_slave cpu_master -latency dense_slave_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy shared_memory cpu_master -latency shared_memory_latency -buffer_size 0 -sync 1 -power 0
+add_delay_policy conv_2d_master 0 -latency 0 -sync 1 -power 0
+add_pipeline_policy code_and_data conv_2d_master -latency code_and_data_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy console conv_2d_master -latency console_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy conv_2d_slave conv_2d_master -latency conv_2d_slave_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy dense_slave conv_2d_master -latency dense_slave_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy shared_memory conv_2d_master -latency shared_memory_latency -buffer_size 0 -sync 1 -power 0
+add_delay_policy dense_master 0 -latency 0 -sync 1 -power 0
+add_pipeline_policy code_and_data dense_master -latency code_and_data_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy console dense_master -latency console_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy conv_2d_slave dense_master -latency conv_2d_slave_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy dense_slave dense_master -latency dense_slave_latency -buffer_size 0 -sync 1 -power 0
+add_pipeline_policy shared_memory dense_master -latency shared_memory_latency -buffer_size 0 -sync 1 -power 0
+
+# === generate options ===
+set_generate_kind "pvt" ;# should be one of: model|pv|pvt
+set_include_file ""
+set_external_pv_include ""
+set_pv_kind "template" ;# should be one of: template|external
+set_timing_kind "policies" ;# should be: policies
+set_power_kind "policies" ;# should be: policies
+set_class_name_external_pv ""
+set_max_parameters_of_pv_constructor 5
+set_overwrite 0
+set_generate_ipxact 0
+set_ipxact_vendor "Mentor.com"
+set_ipxact_version 1.0
+

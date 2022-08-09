@@ -1,0 +1,4 @@
+#accel_cpu.riscv_cpu.PV.cpu0.core.verbose = INSTRUCTIONS
+tlm_timing_model=LT
+accel_cpu.shared_memory.mb_memory_file_storage_load=../../data/weights_float.bin
+#accel_cpu.shared_memory.mb_memory_file_storage_load=../../../data/gzorninplat.bin
