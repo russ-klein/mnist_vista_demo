@@ -6,6 +6,6 @@ setenv VISTA_ROOT    /project/codelink/tools/vista/{$VISTA_VERSION}/install
 setenv CATAPULT_HOME /wv/hlsb/CATAPULT/{$CATAPULT_VERSION}/PRODUCTION/aol/Mgc_home
 setenv MATCHLIB_HOME $CATAPULT_HOME/shared/examples/matchlib
 
-setenv PATH {$PATH}:$VISTA_ROOT/bin:$CATAPULT_HOME/bin
+setenv PATH $VISTA_ROOT/bin:$CATAPULT_HOME/bin:${PATH}
 
 setenv WEIGHT_PATH ../../data
