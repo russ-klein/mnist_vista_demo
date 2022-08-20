@@ -1,0 +1,74 @@
+
+CATAPULT_VERSION ?= 10.5c
+
+CATAPULT_HOME    ?= /wv/hlsb/CATAPULT/$(CATAPULT_VERSION)/PRODUCTION/aol/Mgc_home
+
+#==============================================
+
+FUNCTION         ?= conv_2d
+ACCEL_NAME       ?= cat_accel
+PAR              ?= 1
+
+SOURCES          = testbench.cpp conv_2d.cpp cat_access.cpp catapult_accel.cpp catapult_conv2d.cpp catapult_memory_master.cpp
+SPEC_FILE        = $(FUNCTION).spec
+HEADERS          = cat_access.h catapult_accel.h conv_2d.h catapult_conv2d.h
+
+ACCELERATOR      = ../hw/conv_2d$(PAR).v
+BUS_IF           = ../hw/$(ACCEL_NAME).v
+HEADER           = ../sw/$(FUNCTION).sw.h 
+
+HOST_EXE         = testbench
+
+CRUFT            = Catapult* catapult.log make.out design_checker_constraints.tcl design_checker_pre_build.tcl catapult.pinfo
+
+CATAPULT         = $(CATAPULT_HOME)/bin/catapult
+#CATAPULT_FLAGS   = -shell -file master_par$(PAR).tcl
+CATAPULT_FLAGS   = -shell -file conv_2d.tcl
+
+ifgen            = ../../../if_gen/if_gen_axi
+
+INCLUDES         = -I $(CATAPULT_HOME)/shared/include -I ../../../include -I . -I ../sw
+#INCLUDES         = -I ~/catapult/include -I ../../../include -I .
+
+OPTS             += -D FIXED_POINT -D WEIGHT_MEMORY -D MASTER -D A53
+
+export WEIGHT_PATH = ../../../data
+export PAR
+
+.PHONY: all run_host clean
+
+all: $(ACCELERATOR) $(HEADER) $(BUS_IF) $(HOST_EXE)
+
+run_host: $(HOST_EXE)
+	@echo "Running host testbench"
+	@./$(HOST_EXE)
+
+$(ACCELERATOR): $(SOURCES) $(HEADERS) conv_2d.tcl
+	@echo "catapult testbench.cpp -o $(ACCELERATOR)"
+	@echo PAR=$(PAR)
+	@rm -rf $(CRUFT)
+	@$(CATAPULT) $(CATAPULT_FLAGS) >> make.out
+	@cp Catapult/*/concat_rtl.v $@
+	@rm -rf $(CRUFT)
+
+$(HOST_EXE): $(HEADERS) $(SOURCES) 
+	@echo "gcc $(SOURCES) -o $@"
+	@echo PAR=$(PAR)
+	@g++ -g -o $@ $(INCLUDES) -D HOST -D PAR_IN=$(PAR) -std=c++11 $(OPTS) $(SOURCES) >> make.out
+
+$(BUS_IF): $(SPEC_FILE) $(SOURCES)
+	@echo ifgen $(FUNCTION) $(SPEC_FILE) $(ACCEL_NAME) > $@
+	@$(ifgen) $(FUNCTION) $(SPEC_FILE) $(ACCEL_NAME)
+	mv $(ACCEL_NAME).v $(BUS_IF)
+	mv $(FUNCTION).sw.h $(HEADER)
+
+$(HEADER): $(SPEC_FILE) $(SOURCES)
+	@echo if_gen $(SPEC_FILE) > $@
+	@$(ifgen) $(FUNCTION) $(SPEC_FILE) $(ACCEL_NAME)
+	mv $(ACCEL_NAME).v $(BUS_IF)
+	mv $(FUNCTION).sw.h $(HEADER)
+
+clean:
+	rm -rf $(CRUFT) $(ACCELERATOR) $(HOST_EXE) $(BUS_IF) $(HEADER)
+
+
