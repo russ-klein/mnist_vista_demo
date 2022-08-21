@@ -15,6 +15,8 @@ OBJS             += cat_access.o
 OBJS             += catapult_accel.o
 OBJS             += conv_2d.o
 OBJS             += dense.o
+OBJS             += catapult_dense.o
+OBJS             += catapult_conv2d.o
 
 HOST_EXE         = mnist_infer
 
@@ -80,6 +82,16 @@ cat_access.o: cat_access.cpp cat_access.h defines.h
 	@$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) >> make.out
 
 catapult_accel.o: catapult_accel.cpp catapult_accel.h defines.h ../include/regions.h
+	@echo "GCC      $<"
+	@echo "$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) " >> make.out
+	@$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) >> make.out
+
+catapult_dense.o: catapult_dense.cpp catapult_dense.h defines.h 
+	@echo "GCC      $<"
+	@echo "$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) " >> make.out
+	@$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) >> make.out
+
+catapult_conv2d.o: catapult_conv2d.cpp catapult_conv2d.h dense.h
 	@echo "GCC      $<"
 	@echo "$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) " >> make.out
 	@$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) >> make.out

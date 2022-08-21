@@ -24,16 +24,16 @@
 //   raw_bus_type     ac_int of full bus width
 //   bus type         array of cat_memory_types for full bus_width
 
-#define IMAGE_HEIGHT  28
-#define IMAGE_WIDTH   28
+#define MAX_IMAGE_HEIGHT  28
+#define MAX_IMAGE_WIDTH   28
 
-#define FILTER_HEIGHT  3
-#define FILTER_WIDTH   3
+#define MAX_FILTER_HEIGHT  7
+#define MAX_FILTER_WIDTH   7
 
-#define FILTER_BITS    6
+#define MAX_FILTER_BITS    6
 
-#define IMAGE_SIZE   (IMAGE_HEIGHT * IMAGE_WIDTH)
-#define FILTER_SIZE  (FILTER_HEIGHT * FILTER_WIDTH)
+#define MAX_IMAGE_SIZE   (MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH)
+#define MAX_FILTER_SIZE  (MAX_FILTER_HEIGHT * MAX_FILTER_WIDTH)
 
 #ifdef HOST
 #include "ac_int.h"

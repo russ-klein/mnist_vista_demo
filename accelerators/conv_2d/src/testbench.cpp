@@ -39,8 +39,8 @@ int compare(float *a, float *b, int n)
    return errors;
 }
 
-#define T_IMAGE_HEIGHT  28
-#define T_IMAGE_WIDTH   28
+#define T_IMAGE_HEIGHT  7
+#define T_IMAGE_WIDTH   7
 
 #define T_FILTER_WIDTH     3
 #define T_FILTER_HEIGHT    3
@@ -59,7 +59,7 @@ int main()
 {
     int errors;
     float features[NUM_FEATURES];
-    float weights[NUM_WEIGHTS] = {0,0,0,0,1,0,0,0,0};
+    float weights[NUM_WEIGHTS] = {0,0,0, 0,1,0, 0,0,0}; // {0,0,0,0,0, 0,0,0,0,0, 0,0,1,0,0, 0,0,0,0,0, 0,0,0,0,0};
     float biases[NUM_BIASES];
     float hw_results[NUM_RESULTS];
     float sw_results[NUM_RESULTS];

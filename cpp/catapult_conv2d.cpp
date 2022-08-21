@@ -10,23 +10,23 @@
 // #define PAR_BITS       4
 #define PAR_BITS      (PAR_IN + BUS_WIDTH)
 
-#define AREA (IMAGE_WIDTH * IMAGE_HEIGHT)
-#define MARGIN ((IMAGE_WIDTH * ((FILTER_HEIGHT - 1) / 2)) + ((FILTER_WIDTH - 1) / 2))
-#define MARGIN_ROUND_UP ( STRIDE * (((MARGIN) + (STRIDE - 1)) / (STRIDE)))
-#define TAIL   ((IMAGE_WIDTH * ((FILTER_HEIGHT - 1) / 2)) - ((FILTER_WIDTH - 1) / 2)) + FILTER_WIDTH + (STRIDE - 1)
-#define TAIL_ROUND_UP  ( STRIDE * (((TAIL) + (STRIDE - 1)) / (STRIDE)))
+#define MAX_AREA (MAX_IMAGE_WIDTH * MAX_IMAGE_HEIGHT)
+#define MAX_MARGIN ((MAX_IMAGE_WIDTH * ((MAX_FILTER_HEIGHT - 1) / 2)) + ((MAX_FILTER_WIDTH - 1) / 2))
+#define MAX_MARGIN_ROUND_UP ( STRIDE * (((MAX_MARGIN) + (STRIDE - 1)) / (STRIDE)))
+#define MAX_TAIL   ((MAX_IMAGE_WIDTH * ((MAX_FILTER_HEIGHT - 1) / 2)) - ((MAX_FILTER_WIDTH - 1) / 2)) + MAX_FILTER_WIDTH + (STRIDE - 1)
+#define MAX_TAIL_ROUND_UP  ( STRIDE * (((MAX_TAIL) + (STRIDE - 1)) / (STRIDE)))
 
-#define SHIFT_REGISTER_SIZE  ((MARGIN) + (TAIL_ROUND_UP))
+#define MAX_SHIFT_REGISTER_SIZE  ((MAX_MARGIN) + (MAX_TAIL_ROUND_UP))
 
 //#define SHIFT_REGISTER_SIZE ((WIDTH * 2) + FILTER_WIDTH + (STRIDE - 1)) + \
 //                            (STRIDE * (((((WIDTH * 2) + FILTER_WIDTH + (STRIDE - 1)) - \
 //                            (((WIDTH * (FILTER_HEIGHT - 1)/2)) + FILTER_WIDTH + (STRIDE - 1))) + (STRIDE - 1)) / STRIDE))
 
 
-typedef ac_int<INDEX_BITS, true>    index_type;
-typedef ac_int<FILTER_BITS, false>  filter_index_type;
-typedef ac_int<PAR_BITS, false>     p_type;
-typedef ac_int<STRIDE, false>       enables_type;
+typedef ac_int<INDEX_BITS, true>        index_type;
+typedef ac_int<MAX_FILTER_BITS, false>  filter_index_type;
+typedef ac_int<PAR_BITS, false>         p_type;
+typedef ac_int<STRIDE, false>           enables_type;
 
 static hw_cat_type relu_fn(hw_cat_type n)
 {
@@ -148,20 +148,22 @@ static void perform_convolution(
                          index_type         input_image_number,
                          hw_cat_type        bias,
                          index_type         image_height,
-                         index_type         image_width)
+                         index_type         image_width,
+                         index_type         filter_height,
+                         index_type         filter_width)
 {
     hw_cat_type partial_sum_buffer[STRIDE];
-    hw_cat_type products[STRIDE][FILTER_HEIGHT * FILTER_WIDTH];
+    hw_cat_type products[STRIDE][MAX_FILTER_HEIGHT * MAX_FILTER_WIDTH];
     hw_cat_type sums;
     hw_cat_type feature_load[STRIDE];
     //static hw_cat_type shift_register[FILTER_SIZE];
-    static hw_cat_type shift_register[SHIFT_REGISTER_SIZE];
+    static hw_cat_type shift_register[MAX_SHIFT_REGISTER_SIZE];
 
     // registers for computations
-    hw_cat_type filter_regs[FILTER_SIZE];
-    hw_cat_type image_regs[FILTER_SIZE];
-    hw_cat_type product_array[FILTER_SIZE];
-    hw_cat_type output_array[186];
+    hw_cat_type filter_regs[MAX_FILTER_SIZE];
+    hw_cat_type image_regs[MAX_FILTER_SIZE];
+    hw_cat_type product_array[MAX_FILTER_SIZE];
+    hw_cat_type output_array[500];
 
     hw_cat_type input_regs[STRIDE];
     hw_cat_type output_regs[STRIDE];
@@ -195,15 +197,15 @@ static void perform_convolution(
     // index_type c;
     // index_type r;
 
-    static const index_type tail_round_up = TAIL_ROUND_UP - STRIDE;
-    static const index_type margin_round_up = MARGIN_ROUND_UP;
-    static const index_type area = AREA;
-    static const index_type mid_point_height = (FILTER_HEIGHT - 1) / 2;
-    static const index_type mid_point_width  = (FILTER_WIDTH - 1) / 2;
-    static const index_type stride = STRIDE;
-    static const index_type pixels_to_shift = AREA + SHIFT_REGISTER_SIZE;
+    // static const index_type tail_round_up = TAIL_ROUND_UP - STRIDE;
+    // static const index_type margin_round_up = MARGIN_ROUND_UP;
+    // static const index_type area = AREA;
+    // static const index_type mid_point_height = (FILTER_HEIGHT - 1) / 2;
+    // static const index_type mid_point_width  = (FILTER_WIDTH - 1) / 2;
+    // static const index_type stride = STRIDE;
+    // static const index_type pixels_to_shift = AREA + SHIFT_REGISTER_SIZE;
     static const bool chatty = true;
-    static const index_type out_values = (IMAGE_HEIGHT - FILTER_HEIGHT + 1);
+    // static const index_type out_values = (IMAGE_HEIGHT - FILTER_HEIGHT + 1);
 
     // lead_pixel = the number of the pixel at the start of the shift_register
     // target_pixel = the number of the pixel at the center of the convolution kernel (lead_pixel + margin)
@@ -212,8 +214,22 @@ static void perform_convolution(
 
     // static const index_type filter_width      = (FILTER_WIDTH);
     // static const index_type filter_height     = (FILTER_HEIGHT);
-    static const index_type filter_size       = (FILTER_SIZE);
+    static const index_type filter_size       = filter_height * filter_width; // (MAX_FILTER_SIZE);
     // static const index_type image_width       = (IMAGE_WIDTH);
+
+    // variables for mixed size accelerator
+     
+    const index_type tail                    = ((image_width * ((filter_height - 1) / 2)) - ((filter_width - 1) / 2)) + filter_width + (STRIDE - 1);
+    const index_type tail_round_up           = ( STRIDE * (((tail) + (STRIDE - 1)) / (STRIDE)));
+    const index_type margin                  = ((image_width * ((filter_height - 1) / 2)) + ((filter_width - 1) / 2));
+    const index_type margin_round_up         = ( STRIDE * (((margin) + (STRIDE - 1)) / (STRIDE)));
+    const index_type shift_register_size     = margin + tail_round_up;
+    const index_type pixels_to_shift         = image_height * image_width + shift_register_size;
+    const index_type area                    = image_height * image_width;
+    const index_type mid_point_width         = (filter_width - 1)/2;
+    const index_type mid_point_height        = (filter_height -1)/2;
+    const index_type stride                  = STRIDE;
+
 
     copy_to_regs(filter_regs, 0, filter, 0, filter_size);
 
@@ -226,10 +242,10 @@ main_convolve_loop:
 
         get_shift_in_values(feature_load, input_image, target_pixel, stride, area);
 
-        shift_by_stride(shift_register, feature_load, SHIFT_REGISTER_SIZE);
+        shift_by_stride(shift_register, feature_load, shift_register_size);
         if ((lead_pixel  < 0) || (lead_pixel > area) || (input_image_number == 0)) {
            #pragma hls_unroll
-            for (p=0; p<STRIDE; p++) {
+            for (p=0; p<stride; p++) {
                 partial_sum_buffer[p] = bias; // 0.0;
             }
         } else {
@@ -239,7 +255,7 @@ main_convolve_loop:
         for (p=0; p<STRIDE; p++) {
             p_target_pixel = target_pixel + p;
             p_lead_pixel = lead_pixel + p;
-            compute_row_col(p_lead_pixel, pr, pc, IMAGE_WIDTH);
+            compute_row_col(p_lead_pixel, pr, pc, image_width);
 
             sums = 0;
 
@@ -247,21 +263,21 @@ main_convolve_loop:
 
                #pragma hls_unroll
             conv_outer_loop:
-                for (fr=0; fr<FILTER_HEIGHT; fr++) {
+                for (fr=0; fr<filter_height; fr++) {
 
                    #pragma hls_unroll
                 conv_inner_loop:
-                    for (fc=0; fc<FILTER_WIDTH; fc++) {
+                    for (fc=0; fc<filter_width; fc++) {
 
                         rr = pr + fr - mid_point_height;
                         cc = pc + fc - mid_point_width;
-                        shift_offset = fr * IMAGE_WIDTH + fc + p;
-                        f_index = fr * FILTER_WIDTH + fc;
+                        shift_offset = fr * image_width + fc + p;
+                        f_index = fr * filter_width + fc;
 
-                        products[p][f_index] = (hw_in_bounds(rr, cc, IMAGE_HEIGHT, IMAGE_WIDTH)) ? filter_regs[f_index] * shift_register[shift_offset] : 0.0;
+                        products[p][f_index] = (hw_in_bounds(rr, cc, image_height, image_width)) ? filter_regs[f_index] * shift_register[shift_offset] : 0.0;
 
                         if (chatty & false) {
-                            if (hw_in_bounds(rr, cc, IMAGE_HEIGHT, IMAGE_WIDTH)) {
+                            if (hw_in_bounds(rr, cc, image_height, image_width)) {
                                 printf("image_value[%d][%d]: %5.3f weight_value: %5.3f \n", rr.to_int(), cc.to_int(), shift_register[shift_offset].to_double(), filter_regs[f_index].to_double());
                             }
                         }
@@ -274,7 +290,7 @@ main_convolve_loop:
 
                 partial_sum_buffer[p] += sums;
                 if (chatty) {
-                    if ((output_index % IMAGE_WIDTH)==0) printf("\n");
+                    if ((output_index % image_width)==0) printf("\n");
                     if (sums <0.001) printf("  -   ");
                     else printf("%5.2f ", sums.to_double());
                 }
@@ -285,7 +301,6 @@ main_convolve_loop:
             if ((area - lead_pixel) < stride) {
                num = area - lead_pixel;
             }
-printf("lead_pixel: %d num: %d \n", lead_pixel, num);
             copy_from_regs(output_image, lead_pixel, partial_sum_buffer, 0, num);
             if (chatty) for (int q=0; q<num; q++) { printf("output_image[%d] = %f partial_sum_buffer[%d] = %f \n", lead_pixel+q, output_image[lead_pixel+q].to_double(), q, partial_sum_buffer[q].to_double()); }
         }
@@ -306,7 +321,12 @@ void catapult_conv2d(
                  index_type bias_offset,
                  index_type output_offset,
                  index_type num_input_images,
-                 index_type num_output_images)
+                 index_type num_output_images,
+                 index_type image_height,
+                 index_type image_width,
+                 index_type filter_height,
+                 index_type filter_width
+              )
 {
     index_type   i;
     index_type   o;
@@ -314,18 +334,18 @@ void catapult_conv2d(
     index_type   weight_pointer;
     index_type   output_pointer;
 
-    raw_memory_line output_image_pr_mem[((IMAGE_SIZE) + (STRIDE - 1))/STRIDE];
-    raw_memory_line output_image_mem[((IMAGE_SIZE) + (STRIDE - 1))/STRIDE];
-    raw_memory_line input_image_mem[1][((IMAGE_SIZE) + (STRIDE - 1))/STRIDE];
-    raw_memory_line filter_mem[((FILTER_SIZE) + (STRIDE - 1))/STRIDE];
+    raw_memory_line output_image_pr_mem[((MAX_IMAGE_SIZE) + (STRIDE - 1))/STRIDE];
+    raw_memory_line output_image_mem[((MAX_IMAGE_SIZE) + (STRIDE - 1))/STRIDE];
+    raw_memory_line input_image_mem[1][((MAX_IMAGE_SIZE) + (STRIDE - 1))/STRIDE];
+    raw_memory_line filter_mem[((MAX_FILTER_SIZE) + (STRIDE - 1))/STRIDE];
 
-    hw_cat_type  bias_values[186];
+    hw_cat_type  bias_values[500];
     hw_cat_type  bias_value;
 
-    static const index_type image_height = IMAGE_HEIGHT;
-    static const index_type image_width  = IMAGE_WIDTH;
-    static const index_type filter_size = FILTER_SIZE;
-    static const index_type image_size  = IMAGE_SIZE;
+    // static const index_type image_height = IMAGE_HEIGHT;
+    // static const index_type image_width  = IMAGE_WIDTH;
+           const index_type filter_size = filter_height * filter_width;
+           const index_type image_size  = image_height * image_width;
     static const index_type stride = STRIDE;
 
     go.read();
@@ -354,12 +374,12 @@ void catapult_conv2d(
             // load filter from external memory into internal memory
             load_from_system_memory(memory, weight_pointer, filter_size, filter_mem, 0);
             if (use_bias) bias_value = bias_values[o]; else bias_value = 0.0;
-            perform_convolution(input_image_mem[i], filter_mem, output_image_pr_mem, i, bias_value, image_height, image_width);
+            perform_convolution(input_image_mem[i], filter_mem, output_image_pr_mem, i, bias_value, image_height, image_width, filter_height, filter_width);
             weight_pointer += filter_size;
         }
         perform_relu(relu, output_image_mem, output_image_pr_mem, image_height, image_width);
-        store_into_system_memory(output_image_mem, 0, 95, memory, output_pointer);
-        output_pointer += 95; // (image_height * image_width); // output_pointer++;
+        store_into_system_memory(output_image_mem, 0, image_height * image_width, memory, output_pointer);
+        output_pointer += (image_height * image_width); // output_pointer++;
     }
 
     done.write(1);

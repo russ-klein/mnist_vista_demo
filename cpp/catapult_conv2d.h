@@ -13,5 +13,10 @@ void catapult_conv2d(
                  index_type bias_offset,
                  index_type output_offset,
                  index_type num_input_images,
-                 index_type num_output_images);
+                 index_type num_output_images,
+                 index_type image_height,
+                 index_type image_width,
+                 index_type filter_height,
+                 index_type filter_width
+     );
 

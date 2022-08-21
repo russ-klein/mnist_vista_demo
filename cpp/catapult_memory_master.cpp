@@ -153,9 +153,7 @@ static void write_line(raw_memory_line *array_memory, index_type array_addr, hw_
        #pragma hls_unroll
         for (p=0; p<stride; p++) {
             buffer[p] = ((min <= (mem_addr + p)) && ((mem_addr + p) < max)) ? data[d_offset - diff + p] : get_memory_word(t, p);
-printf("before raw_memory_line: %016x \n", buffer[p].to_int());
             set_memory_word(t, p, buffer[p]);
-printf("after  raw_memory_line: %016x \n", buffer[p].to_int());
                 //-set_line_word(t, p, data[d_offset]);
                 //t.set_slc(p * WORD_SIZE, data[d_offset].slc<WORD_SIZE>(d_offset * WORD_SIZE));
                 //t.word[p] = data[d_offset];
@@ -189,7 +187,6 @@ void copy_from_regs(raw_memory_line *dst, index_type dst_offset, hw_cat_type *sr
     while (count < size) {
         n = stride;
         if ((size - count) < stride) n = size - count;
-printf("copying %d words dst_offset=%d src_offset=%d \n", n, dst_offset, src_offset);
         write_line(dst, dst_offset, src, src_offset, n);
         count += n;
         src_offset += n;

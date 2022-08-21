@@ -298,7 +298,11 @@ void conv2d_hw(
                biases,
                output_image,
                num_input_images,
-               num_output_images);
+               num_output_images,
+               height,
+               width,
+               filter_height,
+               filter_width);
 
     done.read();
 }
