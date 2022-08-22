@@ -12,19 +12,17 @@ import random
 #                                                                               #
 # Can be modified to increase or decrease number of layer, number of channels   #
 # supported layers are Conv2D, Dense, and Flatten.  Suppoted kernel sizes are   #
-# 3, 5, and 7                                                                   #
+# 3, 5, and 7, square kernels only                                              #
 #                                                                               #
 #===============================================================================#
 
 def mnist_model(num_classes):
   # create model
   model = Sequential()
-  model.add(Conv2D(15, (5,5), use_bias=True, padding="same", activation="relu", input_shape=(28,28,1)))
-  model.add(MaxPooling2D(pool_size=(2,2)))
-  model.add(Conv2D(15, (3,3), use_bias=True, padding="same", activation="relu"))
+  model.add(Conv2D(20, (5,5), use_bias=True, padding="same", activation="relu", input_shape=(28,28,1)))
   model.add(MaxPooling2D(pool_size=(2,2)))
   model.add(Flatten())
-  model.add(Dense(20, use_bias=True, kernel_initializer='normal'))
+  model.add(Dense(500, use_bias=True, kernel_initializer='normal'))
   model.add(Dense(num_classes, use_bias=True, kernel_initializer='normal', activation='softmax'))
   # Compile model
   model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
