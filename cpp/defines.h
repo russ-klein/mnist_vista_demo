@@ -40,41 +40,52 @@
 #include "ac_channel.h"
 #include "ac_fixed.h"
 #endif
+/*  
+  #ifndef PAR_IN
+  PAR_IN was not defined
+  #define PAR_IN  (1)
+  #endif // ndef PAR_IN
+  
+  #define PAR_OUT (PAR_IN)
+  #define WEIGHT_MEMORY_SIZE (100000)
+  
+  #ifdef FIXED_POINT
+  
+  #if PAR_IN==1
+  #define WORD_SIZE 32
+  #define INTEGER_BITS 16
+  #endif // PAR_IN == 1
+  
+  #if PAR_IN==2
+  #define WORD_SIZE 16
+  #define INTEGER_BITS 8
+  #endif // PAR_IN == 2
+  
+  #if PAR_IN==3
+  #define WORD_SIZE 10
+  #define INTEGER_BITS 5
+  #endif // PAR_IN == 3
+  
+  #if PAR_IN==4
+  #define WORD_SIZE 8
+  #define INTEGER_BITS 4
+  #endif // PAR_IN == 4
+  
+  #if PAR_IN==5
+  #define WORD_SIZE 6
+  #define INTEGER_BITS 3
+  #endif // PAR_IN == 5
+*/
 
-#ifndef PAR_IN
-PAR_IN was not defined
-#define PAR_IN  (1)
-#endif // ndef PAR_IN
+#ifndef WORD_SIZE 
+#define WORD_SIZE (32)
+#endif 
 
-#define PAR_OUT (PAR_IN)
-#define WEIGHT_MEMORY_SIZE (100000)
+#ifndef INTEGER_BITS
+#define INTEGER_BITS ((WORD_SIZE)/2)
+#endif
 
-#ifdef FIXED_POINT
-
-#if PAR_IN==1
-#define WORD_SIZE 32
-#define INTEGER_BITS 16
-#endif // PAR_IN == 1
-
-#if PAR_IN==2
-#define WORD_SIZE 16
-#define INTEGER_BITS 8
-#endif // PAR_IN == 2
-
-#if PAR_IN==3
-#define WORD_SIZE 10
-#define INTEGER_BITS 5
-#endif // PAR_IN == 3
-
-#if PAR_IN==4
-#define WORD_SIZE 8
-#define INTEGER_BITS 4
-#endif // PAR_IN == 4
-
-#if PAR_IN==5
-#define WORD_SIZE 6
-#define INTEGER_BITS 3
-#endif // PAR_IN == 5
+#define PAR_IN ((32)/(WORD_SIZE))
 
 #define FRACTIONAL_BITS (WORD_SIZE-INTEGER_BITS)
 
@@ -134,4 +145,3 @@ typedef unsigned int bus_type;
 
 static const char program_name[] = "mnist_infer";
 
-#endif

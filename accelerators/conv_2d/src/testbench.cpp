@@ -22,7 +22,7 @@ static void initialize_data(float *f, int n)
     }
 
     for (i=0; i<n; i++) f[i] = 2.0 * (float) rand() / (float) RAND_MAX - 1.0;
-    for (i=0; i<n; i++) f[i] = (float) i;
+    // for (i=0; i<n; i++) f[i] = (float) i;
     return;
 }
 
@@ -42,8 +42,8 @@ int compare(float *a, float *b, int n)
 #define T_IMAGE_HEIGHT  7
 #define T_IMAGE_WIDTH   7
 
-#define T_FILTER_WIDTH     3
-#define T_FILTER_HEIGHT    3
+#define T_FILTER_WIDTH     7
+#define T_FILTER_HEIGHT    7
 
 #define NUM_INPUTS       1
 #define NUM_OUTPUTS      1
@@ -63,8 +63,13 @@ int main()
     float biases[NUM_BIASES];
     float hw_results[NUM_RESULTS];
     float sw_results[NUM_RESULTS];
-printf("start... \n");
+
     cat_memory_type cat_memory[0x2000];
+
+    printf("word_size: %d \n", WORD_SIZE);
+    printf("integer_bits: %d \n", INTEGER_BITS);
+    printf("fractional_bits: %d \n", FRACTIONAL_BITS);
+    printf("par_in: %d \n", PAR_IN);
 
     const int features_offset = 0;
     const int weights_offset  = features_offset + NUM_FEATURES;
@@ -72,7 +77,7 @@ printf("start... \n");
     const int output_offset   = bias_offset + NUM_BIASES;
 
     initialize_data(features, NUM_FEATURES);
-    //initialize_data(weights, NUM_WEIGHTS);
+    initialize_data(weights, NUM_WEIGHTS);
 
     conv2d_sw(features, weights, biases, sw_results, NUM_INPUTS, NUM_OUTPUTS, 
                T_IMAGE_HEIGHT, T_IMAGE_WIDTH, T_FILTER_HEIGHT, T_FILTER_WIDTH, 0, 0, 0);
@@ -80,15 +85,13 @@ printf("start... \n");
     copy_to_cat(cat_memory, features_offset, features, NUM_FEATURES);
     copy_to_cat(cat_memory, weights_offset, weights, NUM_WEIGHTS);
     copy_to_cat(cat_memory, bias_offset, biases, NUM_BIASES);
-printf("start hw... \n");
+
     conv2d_hw(cat_memory, features_offset, weights_offset, bias_offset, output_offset, NUM_INPUTS, NUM_OUTPUTS,
               T_IMAGE_HEIGHT, T_IMAGE_WIDTH, T_FILTER_HEIGHT, T_FILTER_WIDTH, 0, 0, 0);
-printf("done hw... \n");
     copy_from_cat(cat_memory, hw_results, output_offset, NUM_RESULTS);
-printf("done\n");
 
     errors = compare(hw_results, sw_results, TOTAL_SIZE);
 
-    if (errors>0) printf("%d errors \n", errors);
+    printf("%d errors \n", errors);
     return errors;
 }

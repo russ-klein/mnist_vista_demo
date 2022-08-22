@@ -204,7 +204,7 @@ static void perform_convolution(
     // static const index_type mid_point_width  = (FILTER_WIDTH - 1) / 2;
     // static const index_type stride = STRIDE;
     // static const index_type pixels_to_shift = AREA + SHIFT_REGISTER_SIZE;
-    static const bool chatty = true;
+    static const bool chatty = false;
     // static const index_type out_values = (IMAGE_HEIGHT - FILTER_HEIGHT + 1);
 
     // lead_pixel = the number of the pixel at the start of the shift_register
@@ -220,10 +220,10 @@ static void perform_convolution(
     // variables for mixed size accelerator
      
     const index_type tail                    = ((image_width * ((filter_height - 1) / 2)) - ((filter_width - 1) / 2)) + filter_width + (STRIDE - 1);
-    const index_type tail_round_up           = ( STRIDE * (((tail) + (STRIDE - 1)) / (STRIDE)));
+    const index_type tail_round_up           = ( STRIDE * (((tail) + (STRIDE - 1)) / (STRIDE))) - STRIDE;
     const index_type margin                  = ((image_width * ((filter_height - 1) / 2)) + ((filter_width - 1) / 2));
     const index_type margin_round_up         = ( STRIDE * (((margin) + (STRIDE - 1)) / (STRIDE)));
-    const index_type shift_register_size     = margin + tail_round_up;
+    const index_type shift_register_size     = margin + tail_round_up + STRIDE;
     const index_type pixels_to_shift         = image_height * image_width + shift_register_size;
     const index_type area                    = image_height * image_width;
     const index_type mid_point_width         = (filter_width - 1)/2;
@@ -276,7 +276,7 @@ main_convolve_loop:
 
                         products[p][f_index] = (hw_in_bounds(rr, cc, image_height, image_width)) ? filter_regs[f_index] * shift_register[shift_offset] : 0.0;
 
-                        if (chatty & false) {
+                        if (chatty) {
                             if (hw_in_bounds(rr, cc, image_height, image_width)) {
                                 printf("image_value[%d][%d]: %5.3f weight_value: %5.3f \n", rr.to_int(), cc.to_int(), shift_register[shift_offset].to_double(), filter_regs[f_index].to_double());
                             }
@@ -286,7 +286,7 @@ main_convolve_loop:
                     }
                 }
 
-                if (chatty & false) printf("sum[%d][%d] = %5.3f prior sum: %5.3f \n", pr.to_int(), pc.to_int(), sums.to_double(), partial_sum_buffer[p].to_double());
+                if (chatty) printf("sum[%d][%d] = %5.3f prior sum: %5.3f \n", pr.to_int(), pc.to_int(), sums.to_double(), partial_sum_buffer[p].to_double());
 
                 partial_sum_buffer[p] += sums;
                 if (chatty) {

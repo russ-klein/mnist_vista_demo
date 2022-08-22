@@ -5,6 +5,14 @@ CATAPULT_HOME    ?= /wv/hlsb/CATAPULT/$(CATAPULT_VERSION)/PRODUCTION/aol/Mgc_hom
 
 #==============================================
 
+ifdef WORD_SIZE
+OPTS             += -D WORD_SIZE=$(WORD_SIZE)
+endif
+
+ifdef INTEGER_BITS 
+OPTS             += -D INTEGER_BITS=$(INTEGER_BITS)
+endif
+
 FUNCTION         ?= conv_2d
 ACCEL_NAME       ?= cat_accel
 PAR              ?= 1
@@ -34,6 +42,8 @@ OPTS             += -D FIXED_POINT -D WEIGHT_MEMORY -D MASTER -D A53
 
 export WEIGHT_PATH = ../../../data
 export PAR
+export INTEGER_BITS
+export WORD_SIZE
 
 .PHONY: all run_host clean
 
@@ -45,7 +55,8 @@ run_host: $(HOST_EXE)
 
 $(ACCELERATOR): $(SOURCES) $(HEADERS) conv_2d.tcl
 	@echo "catapult testbench.cpp -o $(ACCELERATOR)"
-	@echo PAR=$(PAR)
+	@echo WORD_SIZE=$(WORD_SIZE)
+	@echo INTEGER_BITS=$(INTEGER_BITS)
 	@rm -rf $(CRUFT)
 	@$(CATAPULT) $(CATAPULT_FLAGS) >> make.out
 	@cp Catapult/*/concat_rtl.v $@
@@ -54,7 +65,7 @@ $(ACCELERATOR): $(SOURCES) $(HEADERS) conv_2d.tcl
 $(HOST_EXE): $(HEADERS) $(SOURCES) 
 	@echo "gcc $(SOURCES) -o $@"
 	@echo PAR=$(PAR)
-	@g++ -g -o $@ $(INCLUDES) -D HOST -D PAR_IN=$(PAR) -std=c++11 $(OPTS) $(SOURCES) >> make.out
+	g++ -g -o $@ $(INCLUDES) -D HOST -std=c++11 $(OPTS) $(SOURCES) >> make.out
 
 $(BUS_IF): $(SPEC_FILE) $(SOURCES)
 	@echo ifgen $(FUNCTION) $(SPEC_FILE) $(ACCEL_NAME) > $@

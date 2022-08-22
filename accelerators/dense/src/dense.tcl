@@ -4,7 +4,9 @@ solution file add ./catapult_accel.cpp
 solution file add ./dense.cpp
 solution file add ./catapult_memory_master.cpp
 solution file add ./cat_access.cpp
-options set Input/CompilerFlags {-D PAR_IN=1 -D FIXED_POINT -D HOST -I ../../../include}
+options set Input/CompilerFlags -DWORD_SIZE=$env(WORD_SIZE)
+options set Input/CompilerFlags -DINTEGER_BITS=$env(INTEGER_BITS)
+options set Input/CompilerFlags {-D FIXED_POINT -D HOST -I ../../../include}
 go analyze
 go compile
 solution library add nangate-45nm_beh -- -rtlsyntool DesignCompiler -vendor Nangate -technology 045nm
