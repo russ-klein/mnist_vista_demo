@@ -97,8 +97,8 @@ static void shift_by_stride(hw_cat_type *shift_register, hw_cat_type *input_imag
     static const bool chatty = false;
 
     if (chatty) {
-        printf("address of shift register: %08x \n", shift_register);
-        printf("shift_register_size: %d \n", shift_register_size);
+        printf("address of shift register: %08lx \n", (unsigned long) shift_register);
+        printf("shift_register_size: %d \n", shift_register_size.to_int());
         printf("Shifting in: ");
         for (int i=0; i<STRIDE; i++) printf("%5.3f ", input_image[i].to_double());
         printf("\n");
@@ -302,7 +302,7 @@ main_convolve_loop:
                num = area - lead_pixel;
             }
             copy_from_regs(output_image, lead_pixel, partial_sum_buffer, 0, num);
-            if (chatty) for (int q=0; q<num; q++) { printf("output_image[%d] = %f partial_sum_buffer[%d] = %f \n", lead_pixel+q, output_image[lead_pixel+q].to_double(), q, partial_sum_buffer[q].to_double()); }
+            if (chatty) for (int q=0; q<num; q++) { printf("output_image[%d] = %f partial_sum_buffer[%d] = %f \n", lead_pixel.to_int()+q, output_image[lead_pixel+q].to_double(), q, partial_sum_buffer[q].to_double()); }
         }
     }
 }

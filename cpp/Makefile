@@ -5,10 +5,16 @@ CATAPULT_HOME    ?= /wv/hlsb/CATAPULT/$(CATAPULT_VERSION)/PRODUCTION/aol/Mgc_hom
 #==============================================
 
 ifdef SWEEP
- XTRA_OPTS += -D SWEEP
+ OPTS += -D SWEEP
 endif
 
-PAR              ?= 1
+ifdef WORD_SIZE
+OPTS             += -D WORD_SIZE=$(WORD_SIZE)
+endif
+
+ifdef INTEGER_BITS
+OPTS             += -D INTEGER_BITS=$(INTEGER_BITS)
+endif
 
 OBJS             = main.o
 OBJS             += cat_access.o
@@ -17,6 +23,7 @@ OBJS             += conv_2d.o
 OBJS             += dense.o
 OBJS             += catapult_dense.o
 OBJS             += catapult_conv2d.o
+OBJS             += catapult_memory_master.o
 
 HOST_EXE         = mnist_infer
 
@@ -30,13 +37,11 @@ INCLUDES         += -I ../include
 INCLUDES         += -I $(CATAPULT_HOME)/shared/include 
 INCLUDES         += -I ~/catapult/include 
 
-OPTS             = -std=c++11
-OPTS             += -D PAR_IN=$(PAR)
+OPTS             += -std=c++11
+OPTS             += -O3 
 OPTS             += -D HOST
 OPTS             += -D FIXED_POINT
 OPTS             += -D ALGORITHMIC_VERSION
-
-OPTS             += $(XTRA_OPTS)
 
 QUIET_FLAG       = --no-print-directory
 
@@ -49,9 +54,17 @@ export WEIGHT_PATH = ../data
 
 all: $(HOST_EXE)
 
-run_host: $(HOST_EXE)
+inference: $(HOST_EXE)
 	@echo "Running host testbench"
-	@./$(HOST_EXE)
+	@./$(HOST_EXE) three
+
+ten_inferences: $(HOST_EXE)
+	@echo "Running ten inferences"
+	@./$(HOST_EXE) ten
+
+sweep: $(HOST_EXE)
+	@echo "Running ten inferences"
+	@./$(HOST_EXE) sweep
 
 $(HOST_EXE): $(OBJS)
 	@echo "LD       -o $@"
@@ -106,7 +119,7 @@ dense.o: dense.cpp dense.h defines.h cat_access.h
 	@echo "$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) " >> make.out
 	@$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) >> make.out
 
-mfcc.o: mfcc.cpp mfcc.h
+catapult_memory_master.o: catapult_memory_master.cpp catapult_memory_master.h
 	@echo "GCC      $<"
 	@echo "$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) " >> make.out
 	@$(GCC) -g -c $< -o $@ $(INCLUDES) $(OPTS) >> make.out

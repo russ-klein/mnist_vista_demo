@@ -44,6 +44,26 @@ def create_and_train(epochs=10, batch_size=200, verbose=1):
   # load data
   (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
+  # Compile model
+  model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+  return model
+
+
+#===============================================================================#
+# Create and train the MNIST CNN                                                #
+# ------------------------------                                                #
+#                                                                               #
+# Default epochs is 10, batch_size is 200.  Increase epochs and batch size for  #
+# better inferencing, 20 to 30 epochs is good for generating final weights      #
+#                                                                               #
+#===============================================================================#
+
+
+def create_and_train(epochs=10, batch_size=200, verbose=1):
+
+  # load data
+  (X_train, y_train), (X_test, y_test) = mnist.load_data()
+
   X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2], 1)).astype('int32');
   X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2], 1)).astype('int32');
 
@@ -73,6 +93,19 @@ def print_mnist_image(image):
       print('{:3d} '.format(int(local_image[row][col]*255.0)), end='')
     print(' ')
   print(' ')
+
+
+def original_mnist_model(num_classes):
+  # create model
+  model = Sequential()
+  model.add(Conv2D(20, (5,5), use_bias=True, padding="same", activation="relu", input_shape=(28,28,1)))
+  model.add(MaxPooling2D(pool_size=(2,2)))
+  model.add(Flatten())
+  model.add(Dense(500, use_bias=True, kernel_initializer='normal'))
+  model.add(Dense(num_classes, use_bias=True, kernel_initializer='normal', activation='softmax'))
+  # Compile model
+  model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+  return model
 
 
 
@@ -134,6 +167,10 @@ def save_weights(model, weight_name="mnist_weights"):
 
 
 def load_weights(model, weight_name="mnist_weights"):
-  model.load_weights(weight_name)
+  model.load_weights(weight_name).expect_partial()
 
+def inference():
+  model = original_mnist_model(10)
+  load_weights(model)
+  predict(model)
 

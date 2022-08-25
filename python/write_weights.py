@@ -14,6 +14,7 @@ class Layer_rec:
    bias_address = 0
    out_shape = ()
    out_size = 0
+   high_water_mark = 0
    out_address = 0
 
 def floatToBits(f):
@@ -142,8 +143,8 @@ def print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool):
 
 def print_dense_call(source_file, layer, weight_ptr, input_ptr):
 
-   print('input shape: ', layer.input_shape)
-   print('output shape: ', layer.output_shape)
+   # print('input shape: ', layer.input_shape)
+   # print('output shape: ', layer.output_shape)
 
    in_shape = layer.input_shape;
    in_size = in_shape[1]
@@ -209,26 +210,28 @@ def print_sw_inference(model, source_file):
    for i in range(len(model.layers)):
       layer = model.layers[i]
 
-      print('layer: ', i)
-      print('weight_ptr: ', weight_ptr)
-      print('input_ptr: ', input_ptr)
-      print('output_ptr: ', output_ptr)
+      # print('layer: ', i)
+      # print('weight_ptr: ', weight_ptr)
+      # print('input_ptr: ', input_ptr)
+      # print('output_ptr: ', output_ptr)
 
       if layer.name[:6] == 'conv2d':
          max_pool = False
          out_shape = layer.compute_output_shape(layer.input_shape)
+         big_out_shape = out_shape
          if (i + 1 < len(model.layers)):
             if model.layers[i+1].name[:8] == 'max_pool':
                max_pool = True;
                out_shape = model.layers[i+1].output_shape
-               print('max pool output_shape: ', out_shape)
+               # print('max pool output_shape: ', out_shape)
 
          print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool)
 
          weight_size = layer.kernel.shape[0] * layer.kernel.shape[1] * layer.kernel.shape[2] * layer.kernel.shape[3]
          out_size = out_shape[1] * out_shape[2] * out_shape[3]
+         big_out_size = big_out_shape[1] * big_out_shape[2] * big_out_shape[3]
          in_size = layer.input_shape[1] * layer.input_shape[2] * layer.input_shape[3]
-         print('out size: ', out_size)
+         # print('out size: ', out_size)
 
          if layer.use_bias:
             weight_size += layer.bias.shape[0]
@@ -405,10 +408,10 @@ def print_hw_inference(model, source_file):
    for i in range(len(model.layers)):
       layer = model.layers[i]
 
-      print('layer: ', i)
-      print('weight_ptr: ', weight_ptr)
-      print('input_ptr: ', input_ptr)
-      print('output_ptr: ', output_ptr)
+      # print('layer: ', i)
+      # print('weight_ptr: ', weight_ptr)
+      # print('input_ptr: ', input_ptr)
+      # print('output_ptr: ', output_ptr)
 
       if layer.name[:6] == 'conv2d':
          max_pool = False
@@ -417,14 +420,14 @@ def print_hw_inference(model, source_file):
             if model.layers[i+1].name[:8] == 'max_pool':
                max_pool = True;
                out_shape = model.layers[i+1].output_shape
-               print('max pool output_shape: ', out_shape)
+               # print('max pool output_shape: ', out_shape)
 
          hw_print_convolution_call(source_file, layer, weight_ptr, input_ptr, max_pool)
 
          weight_size = layer.kernel.shape[0] * layer.kernel.shape[1] * layer.kernel.shape[2] * layer.kernel.shape[3]
          out_size = out_shape[1] * out_shape[2] * out_shape[3]
          in_size = layer.input_shape[1] * layer.input_shape[2] * layer.input_shape[3]
-         print('out size: ', out_size)
+         # print('out size: ', out_size)
 
          if layer.use_bias:
             weight_size += layer.bias.shape[0]
@@ -466,18 +469,21 @@ def write_convolution_weights(layer, n, header, data, source, weight_ptr, input_
 
    if max_pool:
       out_shape = max_pool_shape
+      high_water_shape = layer.compute_output_shape(layer.input_shape);
    else:
       out_shape = layer.compute_output_shape(layer.input_shape)
+      high_water_shape = out_shape
 
-   print('out shape: ', out_shape)
-   print('image_height: ', image_height)
-   print('image_width: ', image_width)
+   # print('out shape: ', out_shape)
+   # print('image_height: ', image_height)
+   # print('image_width: ', image_width)
  
    out_size = out_shape[1] * out_shape[2] * out_shape[3]
+   high_water_mark = high_water_shape[1] * high_water_shape[2] * high_water_shape[3]
 
-   print('in convolution write: shape: ', out_shape)
+   # print('in convolution write: shape: ', out_shape)
 
-   print('layer.kernel.shape: ', layer.kernel.shape)
+   # print('layer.kernel.shape: ', layer.kernel.shape)
    count = 0
    for out_image in range(layer.kernel.shape[3]):
       for in_image in range(layer.kernel.shape[2]): 
@@ -502,11 +508,12 @@ def write_convolution_weights(layer, n, header, data, source, weight_ptr, input_
    header.write('   static const int layer{:d}_out_size           = {:d};  \n'.format(n, out_size))
    header.write('      \n')
 
-   return weight_size, out_size;
+   return weight_size, out_size, high_water_mark;
 
 
 def write_dense_weights(layer, n, header, data, source, weight_ptr, input_ptr, images):
 
+   # print('in write dense weights')
    count = 0
    out_shape = layer.compute_output_shape(layer.input_shape);
    out_size = out_shape[1]
@@ -514,6 +521,8 @@ def write_dense_weights(layer, n, header, data, source, weight_ptr, input_ptr, i
 
    image_size = int(layer.kernel.shape[0]/images)
    for i in range(layer.kernel.shape[1]):
+      if (i+1) % 50 == 0:
+        print('image ', i+1, ' of ', layer.kernel.shape[1], ' processed... ')
       for img in range(images):
          for c in range(image_size):
             idx = c * images + img
@@ -640,6 +649,24 @@ def print_memory_map(layer_list, model, input_image_address):
    print_output_map(layer_list)
 
 
+def print_stats(model, min_data_moved, num_params):
+   layers = model.layers
+
+   macs = 0
+   data = 0
+   for layer in layers:
+     if layer.name[:6] == 'conv2d':
+       macs += layer.input_shape[1] * layer.input_shape[2] * layer.input_shape[3] * layer.filters * layer.kernel_size[0] * layer.kernel_size[1]
+     if layer.name[:5] == 'dense':
+       macs += layer.weights[0].shape[0] * layer.weights[0].shape[1]
+
+   print(' MAC operations:        {:10d} '.format(macs))
+   print(' Number of parameters:  {:10d} '.format(num_params))
+   print(' Minimum data transfer: {:10d} words '.format(min_data_moved))
+   print(' ')
+   print(' ')
+
+
 def print_region_header(layer_list, model, input_image_address):
    region_header = open('regions.h', 'w')
 
@@ -686,6 +713,33 @@ def print_region_header(layer_list, model, input_image_address):
 
    region_header.close()
 
+def compute_min_memory(layer_list):
+   
+   # convolution layers may temporarily need additional memory beyond the output size 
+   # this occurs when a max pool operation is used.  If the temporary memory exceeds the
+   # final size of the outputs, then additonal memory is needed past the end of the outputs
+   # this computes the high-water mark, to determine the size of memory needed for the inference
+
+   highest_memory_location = 0
+
+   for layer in layer_list:
+      if (layer.out_address + layer.out_size) > highest_memory_location:
+         highest_memory_location = layer.out_address + layer.out_size
+ 
+   high_water_mark = 0;
+
+   for layer in layer_list:
+      if (layer.out_address + layer.high_water_mark) > high_water_mark:
+         high_water_mark = layer.out_address + layer.high_water_mark     
+
+   # print('highest memory location: ', highest_memory_location)
+   # print('high water mark: ', high_water_mark)
+
+   if highest_memory_location > high_water_mark:
+      return highest_memory_location
+   else:
+      return high_water_mark
+
 def write_header_file(model):
 
    header_file = open('weights.h', 'w')
@@ -715,7 +769,8 @@ def write_header_file(model):
    layer_list = []
 
    for n in range(len(model.layers)):
-      print('layer: ', layer_num)
+      # print('layer name: ', model.layers[n].name)
+      # print('layer: ', layer_num)
 
       layer_list.append(Layer_rec())
 
@@ -733,8 +788,8 @@ def write_header_file(model):
                 max_pool = False
                 max_pool_shape = ()
 
-          print('max pool: ', max_pool)
-          weight_size, out_size = write_convolution_weights(layer, layer_num, header_file, data_file, source_file, weight_ptr, input_ptr, max_pool, max_pool_shape)
+          # print('max pool: ', max_pool)
+          weight_size, out_size, high_water_mark = write_convolution_weights(layer, layer_num, header_file, data_file, source_file, weight_ptr, input_ptr, max_pool, max_pool_shape)
 
           in_size = layer.input_shape[1] * layer.input_shape[2] * layer.input_shape[3]
           output_ptr = input_ptr + in_size
@@ -745,6 +800,7 @@ def write_header_file(model):
 
           layer_list[n].out_address = output_ptr
           layer_list[n].out_size = out_size
+          layer_list[n].high_water_mark = high_water_mark
 
           if max_pool:
              layer_list[n].out_shape = max_pool_shape
@@ -798,6 +854,8 @@ def write_header_file(model):
               input_ptr += out_size
 
 
+   min_memory = compute_min_memory(layer_list)
+
    header_file.write(' \n');
    header_file.write('   //=======End of layers==========================================   \n'.format(layer))
    header_file.write(' \n');
@@ -810,6 +868,10 @@ def write_header_file(model):
 
    header_file.write('   static int const size_of_weights           = {:d}; \n'.format(weight_ptr))
    header_file.write('   static int const size_of_outputs           = {:d}; \n'.format(input_ptr))
+   header_file.write(' \n');
+   header_file.write(' \n');
+   header_file.write('#define MEMORY_SIZE {:d} \n'.format(min_memory));
+   header_file.write(' \n');
    header_file.write(' \n');
 
    header_file.write(' \n')
@@ -825,6 +887,8 @@ def write_header_file(model):
    
    print_memory_map(layer_list, model, input_image_address)
    print_region_header(layer_list, model, input_image_address)
+
+   print_stats(model, input_ptr, weight_ptr);
 
    return layer_list
 

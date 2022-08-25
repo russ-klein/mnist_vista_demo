@@ -11,9 +11,11 @@
 #include "conv_2d.h"
 #include "dense.h"
 
+#ifndef MEMORY_SIZE 
+#define MEMORY_SIZE 2000000
+#endif
 
 //=====Keras layer functions=================//
-
 
 void softmax(
              float *predictions,
@@ -157,12 +159,14 @@ typedef struct features_and_labels_struct testdata_type;
 
 void test_inference()
 {
-    static float           sw_memory[0x1000000];
-    static cat_memory_type hw_memory[0x1000000];  // make it static so you do not blow up the stack
+    static float           sw_memory[MEMORY_SIZE];
+    static cat_memory_type hw_memory[MEMORY_SIZE];  // make it static so you do not blow up the stack
+
     float sw_prob[10];
     float hw_prob[10];
     float image[28*28];
     int i;
+
     const testdata_type   testdata[] = 
                                  { { (unsigned char *) zero,  0},
                                    { (unsigned char *) one,   1},
@@ -179,7 +183,6 @@ void test_inference()
     const int chatty = 0;
 
     printf("testing sw inference... \n");
-
     for (i=0; i<num_tests; i++) {
        if (chatty) print_char_image(testdata[i].features, 28, 28);
        sw_inference(testdata[i].features, sw_memory, sw_prob);
@@ -202,7 +205,6 @@ void test_inference()
     }
 }
 
-
 int p_index(float *probability)
 {
     int i;
@@ -219,7 +221,6 @@ int p_index(float *probability)
 }
 
 #ifdef HOST
-
 int max_probability(float *p)
 {
     int i;
@@ -241,8 +242,8 @@ void sweep()
     
     float probabilities[10]; 
     float image[image_height * image_width];
-    static cat_memory_type hw_memory[0x1000000];  // make it static so you do not blow up the stack
-    static float           sw_memory[0x1000000];
+    static cat_memory_type hw_memory[MEMORY_SIZE];  // make it static so you do not blow up the stack
+    static float           sw_memory[MEMORY_SIZE];
     unsigned char raw_image[image_height][image_width];
     unsigned char answer;
     size_t n; 
@@ -273,51 +274,61 @@ void sweep()
 }
 #endif
 
-int main()
+int main(int parameter_count, char *parameter[])
 {
     float sw_prob[10];
     float hw_prob[10];
     int errors = 0;
     int i;
 
+    printf(" \n");
+    printf("WORD_SIZE: %d \n", WORD_SIZE);
+    printf("INTEGER_BITS: %d \n",INTEGER_BITS);
+    printf("FRACTIONAL_BITS: %d \n", FRACTIONAL_BITS);
+    printf("PAR_IN: %d \n", PAR_IN);
+    printf(" \n");
+
 #ifdef HOST
-    static cat_memory_type hw_memory[0x1000000];  // make it static so you do not blow up the stack
-    static float           sw_memory[0x1000000];
+    static cat_memory_type hw_memory[MEMORY_SIZE];  // make it static so you do not blow up the stack
+    static float           sw_memory[MEMORY_SIZE];
 #else
     cat_memory_type *hw_memory = (cat_memory_type *) 0x40000000;
     float           *sw_memory = (float *) 0x50000000;
 #endif
 
-#ifdef SWEEP
-    sweep();
-#else
-    test_inference();
-#endif
-
-/*
-    printf("start sw: \n");
-    sw_inference(&three[0][0], sw_memory, sw_prob);
-
-    printf("start hw: \n");
-    hw_inference(&three[0][0], hw_memory, hw_prob);
-
-    for (i=0; i<10; i++) {
-        if (not_close(sw_prob[i], hw_prob[i])) {
-           printf("%d: hw: %f sw: %f \n", i, hw_prob[i], sw_prob[i]);
-           errors++;
-        }
+    if ((parameter_count>1) && (strcmp(parameter[1], "sweep") == 0)) {
+       sweep();
     }
 
-    record_differences(sw_memory, hw_memory, size_of_outputs);
-
-    if (errors) {
-        printf("Test failed, hw does not match sw! \n");
-        return 1;
-    } else {
-        printf("Test passed! \n");
-        return 0;
+    if ((parameter_count>1) && (strcmp(parameter[1], "ten") == 0)) {
+       test_inference();
     }
-*/
+
+    if ((parameter_count>1) && (strcmp(parameter[1], "three") == 0)) {
+
+       printf("start sw: \n");
+       sw_inference(&three[0][0], sw_memory, sw_prob);
+
+       printf("start hw: \n");
+       hw_inference(&three[0][0], hw_memory, hw_prob);
+
+       for (i=0; i<10; i++) {
+           if (not_close(sw_prob[i], hw_prob[i])) {
+              printf("%d: hw: %f sw: %f \n", i, hw_prob[i], sw_prob[i]);
+              errors++;
+           }
+       }
+
+       record_differences(sw_memory, hw_memory, size_of_outputs);
+   
+       if (errors) {
+           printf("Test failed, hw does not match sw! \n");
+           return 1;
+       } else {
+           printf("Test passed! \n");
+           return 0;
+       }
+    }
+
     return 0;
 }
-

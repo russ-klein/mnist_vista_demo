@@ -14,5 +14,8 @@ all:
 	mv auto_infer.h ../include
 	mv weights_float.bin ../data
 
+inference:
+	python inference.py
+
 clean: 
 	rm -rf $(HEADERS) $(DATA)
