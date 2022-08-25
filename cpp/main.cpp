@@ -88,7 +88,7 @@ void scale(unsigned char *input_image, float *output_image, int count)
 }
 
 
-void sw_inference(unsigned char *input_image, float *memory, float *probabilities)
+void sw_inference(unsigned char *input_image, float *memory, float *probabilities, int verbose)
 {
     float image[28*28];
     int image_offset = size_of_weights;
@@ -102,7 +102,7 @@ void sw_inference(unsigned char *input_image, float *memory, float *probabilitie
 
     sw_auto_infer(memory, image_offset, probabilities);
 
-    if (chatty) {
+    if (chatty | verbose) {
         printf("sw prediction: \n");
         for (i=0; i<10; i++) {
            printf("%d = %8.6f \n", i, probabilities[i]);
@@ -112,7 +112,7 @@ void sw_inference(unsigned char *input_image, float *memory, float *probabilitie
 }
 
 
-void hw_inference(unsigned char *input_image, cat_memory_type *memory, float *probabilities)
+void hw_inference(unsigned char *input_image, cat_memory_type *memory, float *probabilities, int verbose)
 {
     float image[28*28];
     int image_offset = size_of_weights;
@@ -126,7 +126,7 @@ void hw_inference(unsigned char *input_image, cat_memory_type *memory, float *pr
 
     hw_auto_infer(memory, image_offset, probabilities);
 
-    if (chatty) {
+    if (chatty | verbose) {
         printf("hw prediction: \n");
         for (i=0; i<10; i++) {
            printf("%d = %8.6f \n", i, probabilities[i]);
@@ -185,7 +185,7 @@ void test_inference()
     printf("testing sw inference... \n");
     for (i=0; i<num_tests; i++) {
        if (chatty) print_char_image(testdata[i].features, 28, 28);
-       sw_inference(testdata[i].features, sw_memory, sw_prob);
+       sw_inference(testdata[i].features, sw_memory, sw_prob, 0);
        if (chatty) {
            printf("Label: %d \n\n", testdata[i].label);
            printf("Probabilities: \n");
@@ -199,7 +199,7 @@ void test_inference()
     printf("testing hw inference... \n");
 
     for (i=0; i<num_tests; i++) {
-       hw_inference(testdata[i].features, hw_memory, hw_prob);
+       hw_inference(testdata[i].features, hw_memory, hw_prob, 0);
        if (hw_prob[testdata[i].label] > 0.5) printf("hw inference for %d passed %6.2f \n", i, hw_prob[i] * 100.0); 
                         else printf("hw inference for %d failed %6.2f \n", i, hw_prob[i] * 100.0);
     }
@@ -260,7 +260,7 @@ void sweep()
         if (n) {
             n = fread(&raw_image, image_height * image_width, 1, f);
             if (n) {
-                hw_inference(&(raw_image[0][0]), hw_memory, probabilities);
+                hw_inference(&(raw_image[0][0]), hw_memory, probabilities, 0);
                 if (answer == max_probability(probabilities)) correct++;
                 // else show(answer, raw_image, probabilities);
                 tests++;
@@ -306,11 +306,13 @@ int main(int parameter_count, char *parameter[])
 
     if ((parameter_count>1) && (strcmp(parameter[1], "three") == 0)) {
 
+       print_char_image(&three[0][0], image_height, image_width);
+
        printf("start sw: \n");
-       sw_inference(&three[0][0], sw_memory, sw_prob);
+       sw_inference(&three[0][0], sw_memory, sw_prob, 1);
 
        printf("start hw: \n");
-       hw_inference(&three[0][0], hw_memory, hw_prob);
+       hw_inference(&three[0][0], hw_memory, hw_prob, 1);
 
        for (i=0; i<10; i++) {
            if (not_close(sw_prob[i], hw_prob[i])) {
